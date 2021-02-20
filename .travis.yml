@@ -1,0 +1,8 @@
+language: cpp
+dist: bionic
+compiler: clang
+
+script:
+  - make
+
+after_success:
