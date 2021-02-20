@@ -12,6 +12,7 @@
 
 #include <string>
 #include <list>
+#include <memory>
 #include "glm/gtc/quaternion.hpp"
 
 namespace eSGraph {
