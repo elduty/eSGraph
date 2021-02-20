@@ -1,6 +1,4 @@
-Branch|[![Travis CI logo](TravisCI.png)](https://travis-ci.org)
----|---
-main|[![Build Status](https://travis-ci.org/elduty/eSGraph.svg?branch=main)](https://travis-ci.org/github/elduty/eSGraph)
+[![Build Status](https://travis-ci.org/elduty/eSGraph.svg?branch=main)](https://travis-ci.org/elduty/eSGraph)
 
 # eSGraph
 
