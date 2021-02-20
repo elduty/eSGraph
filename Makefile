@@ -4,7 +4,7 @@ OUTPUTFILE := eSGraph.a
 INC=include external/glm
 
 INC_PARAMS=$(foreach d, $(INC), -I$d)
-CXXFLAGS := -std=c++11 $(INC_PARAMS)
+CXXFLAGS := -std=c++11 -fPIC $(INC_PARAMS)
 LDFLAGS := -shared
 LDLIBS :=
 
