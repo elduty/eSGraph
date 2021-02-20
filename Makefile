@@ -4,7 +4,7 @@ OUTPUTFILE := eSGraph.a
 INC=include external/glm
 
 INC_PARAMS=$(foreach d, $(INC), -I$d)
-CXXFLAGS := -std=c++11 $(INC_PARAMS) -MMD -MP
+CXXFLAGS := -std=c++11 $(INC_PARAMS)
 LDFLAGS := -shared
 LDLIBS :=
 
@@ -19,17 +19,6 @@ all: $(OUTPUTFILE)
 $(OUTPUTFILE): $(objects)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(OUTPUTFILE) $(objects) $(LDLIBS)
 
-depend: .depend
-
-.depend: $(srcfiles)
-	rm -f ./.depend
-	$(CXX) $(CXXFLAGS) -MM $^>>./.depend;
-
 clean:
 	rm -f $(objects)
 	rm -f $(OUTPUTFILE)
-
-dist-clean: clean
-	rm -f *~ .depend
-
-include .depend
