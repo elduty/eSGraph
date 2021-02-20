@@ -6,8 +6,7 @@
 //
 
 #include "Node.hpp"
-#include <algorithm>
-#include <glm/gtx/matrix_decompose.hpp>
+
 using namespace eSGraph;
 
 Node::Node() : mParent(nullptr), mMatrix(glm::identity<glm::mat4>()),mGlobalMatrix(glm::identity<glm::mat4>()), mPosition(glm::vec3()), mScale(glm::vec3(1.0)), mRotation(glm::identity<glm::quat>()), mGlobalMatrixDirty(true), mMatrixDirty(true)

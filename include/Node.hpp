@@ -11,7 +11,6 @@
 #define GLM_FORCE_XYZW_ONLY
 
 #include <string>
-#include <memory>
 #include <list>
 #include "glm/gtc/quaternion.hpp"
 
