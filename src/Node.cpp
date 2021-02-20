@@ -246,6 +246,12 @@ void Node::setRotation(const glm::vec3& eulerAngles, Coordinates coordinates)
     setRotation(glm::quat(eulerAngles), coordinates);
 }
 
+void Node::setMatrixDirty()
+{
+    mMatrixDirty = true;
+    setGlobalMatrixDirty();
+}
+
 void Node::setGlobalMatrixDirty()
 {
     mGlobalMatrixDirty = true;

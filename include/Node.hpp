@@ -90,6 +90,7 @@ protected:
     glm::vec3 mScale;
     glm::quat mRotation;
     
+    void setMatrixDirty();
     void setGlobalMatrixDirty();
 };
 }
