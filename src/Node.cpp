@@ -177,11 +177,10 @@ void Node::setPosition(const glm::vec3& position, Coordinates coordinates)
             break;
     }
     
-    mMatrixDirty = true;
-    setGlobalMatrixDirty();
+    setMatrixDirty();
 }
 
-glm::vec3 Node::getScale() const
+const glm::vec3& Node::getScale() const
 {
     return mScale;
 }
@@ -189,8 +188,8 @@ glm::vec3 Node::getScale() const
 void Node::setScale(const glm::vec3& scaleVector)
 {
     mScale = scaleVector;
-    mMatrixDirty = true;
-    setGlobalMatrixDirty();
+    
+    setMatrixDirty();
 }
 
 void Node::setScale(float x, float y, float z)
@@ -237,8 +236,8 @@ void Node::setRotation(const glm::quat& rotation, Coordinates coordinates)
             mRotation = glm::normalize(rotation);
             break;
     }
-    mMatrixDirty = true;
-    setGlobalMatrixDirty();
+    
+    setMatrixDirty();
 }
 
 void Node::setRotation(const glm::vec3& eulerAngles, Coordinates coordinates)
@@ -262,7 +261,7 @@ void Node::setGlobalMatrixDirty()
     }
 }
 
-glm::mat4 Node::getMatrix()
+const glm::mat4& Node::getMatrix()
 {
     if(mMatrixDirty)
     {
@@ -273,7 +272,7 @@ glm::mat4 Node::getMatrix()
     return mMatrix;
 }
 
-glm::mat4 Node::getGlobalMatrix()
+const glm::mat4& Node::getGlobalMatrix()
 {
     if(mGlobalMatrixDirty)
     {

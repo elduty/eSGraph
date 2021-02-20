@@ -62,10 +62,10 @@ public:
     void setScale(const glm::vec3& scaleVector);
     void setScale(float x, float y, float z);
     void setScale(float scaleFactor);
-    glm::vec3 getScale() const;
+    const glm::vec3& getScale() const;
     
-    glm::mat4 getMatrix();
-    glm::mat4 getGlobalMatrix();
+    const glm::mat4& getMatrix();
+    const glm::mat4& getGlobalMatrix();
     
     void translate(const glm::vec3& translationVector, Coordinates coordinates = Coordinates::LOCAL);
     
