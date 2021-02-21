@@ -18,10 +18,6 @@ Node::Node(const std::string& identifier): Node()
     mIdentifier = identifier;
 }
 
-Node::~Node()
-{
-}
-
 std::string Node::getIdentifier() const
 {
     return mIdentifier;

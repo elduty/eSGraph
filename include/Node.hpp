@@ -28,7 +28,7 @@ class Node
 public:
     Node();
     Node(const std::string& identifier);
-    virtual ~Node();
+    virtual ~Node(){};
     
     std::string getIdentifier() const;
     void setIdentifier(const std::string& identifier);
@@ -80,16 +80,16 @@ public:
     void scale(float scaleFactor);
     
 protected:
+    glm::mat4 mMatrix;
+    glm::mat4 mGlobalMatrix;
+    glm::quat mRotation;
+    glm::vec3 mPosition;
+    glm::vec3 mScale;
     std::string mIdentifier;
     std::list<std::unique_ptr<Node>> mChildren;
     Node* mParent;
     bool mGlobalMatrixDirty;
     bool mMatrixDirty;
-    glm::mat4 mMatrix;
-    glm::mat4 mGlobalMatrix;
-    glm::vec3 mPosition;
-    glm::vec3 mScale;
-    glm::quat mRotation;
     
     void setMatrixDirty();
     void setGlobalMatrixDirty();
