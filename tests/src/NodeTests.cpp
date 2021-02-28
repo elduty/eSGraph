@@ -5,9 +5,11 @@
 //  Created by elduty on 03/08/2019.
 //
 
-#include "tests/NodeTests.hpp"
+#include "NodeTests.hpp"
 #include "Node.hpp"
 #include <memory>
+#include "src/gtest-all.cc"
+#include "src/gtest_main.cc"
 
 using namespace eSGraph;
 

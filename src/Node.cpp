@@ -155,6 +155,7 @@ glm::vec3 Node::getPosition(Coordinates coordinates) const
             if(hasParent())
                 return mParent->getGlobalMatrix() * glm::vec4(mPosition, 1.0);
         case Coordinates::LOCAL:
+        default:
             return mPosition;
     }
 }
@@ -169,6 +170,7 @@ void Node::setPosition(const glm::vec3& position, Coordinates coordinates)
                 break;
             }
         case Coordinates::LOCAL:
+        default:
             mPosition = position;
             break;
     }
@@ -205,6 +207,7 @@ glm::quat Node::getRotation(Coordinates coordinates) const
             if(hasParent())
                 return mParent->getGlobalMatrix() * glm::mat4_cast(mRotation);
         case Coordinates::LOCAL:
+        default:
             return mRotation;
     }
 }
@@ -229,6 +232,7 @@ void Node::setRotation(const glm::quat& rotation, Coordinates coordinates)
                 break;
             }
         case Coordinates::LOCAL:
+        default:
             mRotation = glm::normalize(rotation);
             break;
     }
@@ -296,6 +300,7 @@ void Node::translate(const glm::vec3& translationVector, Coordinates coordinates
             }
             break;
         case Coordinates::LOCAL:
+        default:
             setPosition(mPosition + mRotation * translationVector);
             break;
     }
@@ -340,6 +345,7 @@ void Node::rotate(const glm::vec3& axis, float angle, Coordinates coordinates)
                 setRotation(glm::rotate(mRotation, angle, glm::normalize(axis) * getRotation(Coordinates::WORLD)));
                 break;
         case Coordinates::LOCAL:
+        default:
             setRotation(glm::rotate(mRotation, angle, glm::normalize(axis)));
             break;
     }
