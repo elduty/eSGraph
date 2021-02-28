@@ -1,8 +1,7 @@
 language: cpp
-compiler: gcc
+compiler: clang
 
-before_script: cd platforms/Netbeans/eSGraph
 script:
-  - make test
+  - make
 
 after_success:
