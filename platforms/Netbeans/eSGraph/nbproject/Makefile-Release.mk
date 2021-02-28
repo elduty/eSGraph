@@ -77,7 +77,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libesgraph.a: ${OBJECTFILES}
 ${OBJECTDIR}/_ext/52a4beb5/Node.o: ../../../src/Node.cpp
 	${MKDIR} -p ${OBJECTDIR}/_ext/52a4beb5
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../include -I../../../external/glm -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/52a4beb5/Node.o ../../../src/Node.cpp
+	$(COMPILE.cc) -O2 -I../../../include -I../../../external/glm -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/52a4beb5/Node.o ../../../src/Node.cpp
 
 # Subprojects
 .build-subprojects:
@@ -94,7 +94,7 @@ ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/76fcd107/NodeTests.o ${OBJECTFILES:%.o=
 ${TESTDIR}/_ext/76fcd107/NodeTests.o: ../../../tests/src/NodeTests.cpp 
 	${MKDIR} -p ${TESTDIR}/_ext/76fcd107
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../include -I../../../external/glm -I../../../external/googletest/googletest/include -I../../../tests/include -I../../../external/googletest/googletest -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/76fcd107/NodeTests.o ../../../tests/src/NodeTests.cpp
+	$(COMPILE.cc) -O2 -I../../../include -I../../../external/glm -I../../../external/googletest/googletest/include -I../../../tests/include -I../../../external/googletest/googletest -I. -std=c++14 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/76fcd107/NodeTests.o ../../../tests/src/NodeTests.cpp
 
 
 ${OBJECTDIR}/_ext/52a4beb5/Node_nomain.o: ${OBJECTDIR}/_ext/52a4beb5/Node.o ../../../src/Node.cpp 
@@ -105,7 +105,7 @@ ${OBJECTDIR}/_ext/52a4beb5/Node_nomain.o: ${OBJECTDIR}/_ext/52a4beb5/Node.o ../.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../include -I../../../external/glm -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/52a4beb5/Node_nomain.o ../../../src/Node.cpp;\
+	    $(COMPILE.cc) -O2 -I../../../include -I../../../external/glm -std=c++14 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/52a4beb5/Node_nomain.o ../../../src/Node.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/52a4beb5/Node.o ${OBJECTDIR}/_ext/52a4beb5/Node_nomain.o;\
 	fi
