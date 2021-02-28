@@ -53,7 +53,6 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <standard>11</standard>
           <incDir>
             <pElem>../../../include</pElem>
             <pElem>../../../external/glm</pElem>
@@ -110,7 +109,6 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
-          <standard>11</standard>
           <incDir>
             <pElem>../../../include</pElem>
             <pElem>../../../external/glm</pElem>
