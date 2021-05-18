@@ -228,9 +228,7 @@ TEST_F(NodeTests, checkSetPositionAfterRemoveChild)
     
     EXPECT_EQ(child->getPosition(Coordinates::WORLD), parent->getPosition(Coordinates::WORLD) + childPosition);
     
-    parent->removeChild(child);
-    
-    EXPECT_EQ(child->getPosition(Coordinates::WORLD), childPosition);
+    EXPECT_EQ(parent->removeChild(child)->getPosition(Coordinates::WORLD), childPosition);
     
 }
 
@@ -254,10 +252,7 @@ TEST_F(NodeTests, checkTranslateAfterRemoveChild)
     
     EXPECT_EQ(child->getPosition(Coordinates::WORLD), parent->getPosition(Coordinates::WORLD) + child->getPosition());
     EXPECT_EQ(child->getPosition(Coordinates::WORLD), parent->getPosition(Coordinates::WORLD) + childPositionBeforeTranslation + childTranslate);
-    
-    parent->removeChild(child);
-    
-    EXPECT_EQ(child->getPosition(Coordinates::WORLD), childPositionBeforeTranslation + childTranslate);
+    EXPECT_EQ(parent->removeChild(child)->getPosition(Coordinates::WORLD), childPositionBeforeTranslation + childTranslate);
 }
 
 TEST_F(NodeTests, checkTranslateInGraph)
