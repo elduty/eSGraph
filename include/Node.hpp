@@ -19,7 +19,7 @@ namespace eSGraph {
 enum class Coordinates
 {
     LOCAL,
-    //PARENT,
+    PARENT,
     WORLD
 };
     

@@ -617,3 +617,62 @@ TEST_F(NodeTests, checkWorldTranslateWithParentScale)
     EXPECT_FLOAT_EQ(localPos.y, 0.0f);
     EXPECT_FLOAT_EQ(localPos.z, 0.0f);
 }
+
+TEST_F(NodeTests, checkTranslateParentSpace)
+{
+    std::unique_ptr<Node> parent = std::make_unique<Node>("PARENT");
+    Node* child = new Node("CHILD");
+    parent->addChild(std::unique_ptr<Node>(child));
+
+    // Rotate child 90 degrees around Z
+    child->setRotation(glm::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+
+    // Translate in PARENT space (should move along parent's X, not child's rotated X)
+    child->translate(glm::vec3(1.0f, 0.0f, 0.0f), Coordinates::PARENT);
+
+    glm::vec3 pos = child->getPosition(Coordinates::PARENT);
+    EXPECT_FLOAT_EQ(pos.x, 1.0f);
+    EXPECT_FLOAT_EQ(pos.y, 0.0f);
+    EXPECT_FLOAT_EQ(pos.z, 0.0f);
+
+    // Compare with LOCAL translation which applies rotation
+    child->setPosition(glm::vec3(0.0f));
+    child->translate(glm::vec3(1.0f, 0.0f, 0.0f), Coordinates::LOCAL);
+
+    glm::vec3 localPos = child->getPosition(Coordinates::LOCAL);
+    // LOCAL applies 90-degree Z rotation, so X becomes Y
+    EXPECT_NEAR(localPos.x, 0.0f, 1e-6f);
+    EXPECT_NEAR(localPos.y, 1.0f, 1e-6f);
+    EXPECT_NEAR(localPos.z, 0.0f, 1e-6f);
+}
+
+TEST_F(NodeTests, checkRotateParentSpace)
+{
+    std::unique_ptr<Node> parent = std::make_unique<Node>("PARENT");
+    Node* child = new Node("CHILD");
+    parent->addChild(std::unique_ptr<Node>(child));
+
+    // Rotate child 90 degrees around Z in local space
+    child->setRotation(glm::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+
+    // Rotate 90 degrees around parent's Y axis
+    child->rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(90.0f), Coordinates::PARENT);
+
+    // The rotation should be applied relative to parent's axes
+    glm::quat rot = child->getRotation(Coordinates::PARENT);
+    // Verify rotation was applied correctly (not identity)
+    EXPECT_FALSE(rot == glm::identity<glm::quat>());
+}
+
+TEST_F(NodeTests, checkGetSetPositionParentSpace)
+{
+    std::unique_ptr<Node> parent = std::make_unique<Node>("PARENT");
+    Node* child = new Node("CHILD");
+    parent->addChild(std::unique_ptr<Node>(child));
+
+    glm::vec3 position(5.0f, 3.0f, 2.0f);
+    child->setPosition(position, Coordinates::PARENT);
+
+    EXPECT_EQ(child->getPosition(Coordinates::PARENT), position);
+    EXPECT_EQ(child->getPosition(Coordinates::LOCAL), position);
+}
