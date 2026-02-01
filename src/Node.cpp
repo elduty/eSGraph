@@ -6,6 +6,7 @@
 //
 
 #include "Node.hpp"
+#include <vector>
 
 using namespace eSGraph;
 
@@ -13,12 +14,12 @@ Node::Node() : mParent(nullptr), mMatrix(glm::identity<glm::mat4>()),mGlobalMatr
 {
 }
 
-Node::Node(const std::string& identifier): Node()
+Node::Node(std::string identifier): Node()
 {
-    mIdentifier = identifier;
+    mIdentifier = std::move(identifier);
 }
 
-std::string Node::getIdentifier() const
+std::string Node::getIdentifier() const noexcept
 {
     return mIdentifier;
 }
@@ -28,22 +29,22 @@ void Node::setIdentifier(const std::string& identifier)
     mIdentifier = identifier;
 }
 
-bool Node::isChildOf(Node* parent) const
+bool Node::isChildOf(Node* parent) const noexcept
 {
     return mParent == parent;
 }
 
-bool Node::isChildOf(const std::string& identifier) const
+bool Node::isChildOf(const std::string& identifier) const noexcept
 {
     return hasParent() && mParent->getIdentifier() == identifier;
 }
 
-bool Node::hasChildren() const
+bool Node::hasChildren() const noexcept
 {
     return !mChildren.empty();
 }
 
-bool Node::hasChild(Node* child) const
+bool Node::hasChild(Node* child) const noexcept
 {
     return child != nullptr && child->getParent() == this;
 }
@@ -61,7 +62,7 @@ bool Node::hasChild(const std::string& childIdentifier) const
     return false;
 }
 
-bool Node::hasParent() const
+bool Node::hasParent() const noexcept
 {
     return mParent != nullptr;
 }
@@ -138,12 +139,12 @@ std::list<std::unique_ptr<Node>> Node::removeAllChildren()
     return std::move(mChildren);
 }
 
-Node* Node::getParent() const
+Node* Node::getParent() const noexcept
 {
     return mParent;
 }
 
-const std::list<std::unique_ptr<Node>>& Node::getChildren() const
+const std::list<std::unique_ptr<Node>>& Node::getChildren() const noexcept
 {
     return mChildren;
 }
@@ -182,7 +183,7 @@ void Node::setPosition(const glm::vec3& position, Coordinates coordinates)
     setMatrixDirty();
 }
 
-const glm::vec3& Node::getScale() const
+const glm::vec3& Node::getScale() const noexcept
 {
     return mScale;
 }
@@ -236,7 +237,7 @@ void Node::setRotation(const glm::quat& rotation, Coordinates coordinates)
         case Coordinates::WORLD:
             if(hasParent())
             {
-                mRotation = glm::inverse(mParent->getRotation(Coordinates::WORLD)) * glm::normalize(rotation);
+                mRotation = glm::conjugate(mParent->getRotation(Coordinates::WORLD)) * glm::normalize(rotation);
                 break;
             }
             // fall through - no parent means local = world
@@ -263,11 +264,20 @@ void Node::setMatrixDirty()
 
 void Node::setGlobalMatrixDirty()
 {
-    mGlobalMatrixDirty = true;
-    
-    for(auto&& child : mChildren)
+    std::vector<Node*> stack;
+    stack.push_back(this);
+
+    while (!stack.empty())
     {
-        child->setGlobalMatrixDirty();
+        Node* current = stack.back();
+        stack.pop_back();
+
+        current->mGlobalMatrixDirty = true;
+
+        for (auto& child : current->mChildren)
+        {
+            stack.push_back(child.get());
+        }
     }
 }
 
@@ -361,15 +371,15 @@ void Node::rotate(const glm::vec3& axis, float angle, Coordinates coordinates)
     switch (coordinates) {
         case Coordinates::WORLD:
         {
-            // Transform world axis to local space using inverse of world rotation
-            glm::vec3 localAxis = glm::inverse(getRotation(Coordinates::WORLD)) * glm::normalize(axis);
+            // Transform world axis to local space using conjugate of world rotation
+            glm::vec3 localAxis = glm::conjugate(getRotation(Coordinates::WORLD)) * glm::normalize(axis);
             setRotation(glm::rotate(mRotation, angle, localAxis));
             break;
         }
         case Coordinates::PARENT:
         {
-            // Transform parent axis to local space using inverse of local rotation
-            glm::vec3 localAxis = glm::inverse(mRotation) * glm::normalize(axis);
+            // Transform parent axis to local space using conjugate of local rotation
+            glm::vec3 localAxis = glm::conjugate(mRotation) * glm::normalize(axis);
             setRotation(glm::rotate(mRotation, angle, localAxis));
             break;
         }

@@ -27,29 +27,29 @@ class Node
 {
 public:
     Node();
-    Node(const std::string& identifier);
+    Node(std::string identifier);
     virtual ~Node(){};
-    
-    std::string getIdentifier() const;
+
+    std::string getIdentifier() const noexcept;
     void setIdentifier(const std::string& identifier);
-    
+
     void addChild(std::unique_ptr<Node> child);
     std::unique_ptr<Node> removeChild(Node* child);
     std::unique_ptr<Node> removeChild(const std::string& identifier);
     std::list<std::unique_ptr<Node>> removeAllChildren();
-    
+
     static void attachTo(std::unique_ptr<Node> node, Node* parent);
     std::unique_ptr<Node> detach();
-    
-    bool isChildOf(Node* parent) const;
-    bool isChildOf(const std::string& identifier) const;
-    bool hasParent() const;
-    bool hasChild(Node* child) const;
+
+    bool isChildOf(Node* parent) const noexcept;
+    bool isChildOf(const std::string& identifier) const noexcept;
+    bool hasParent() const noexcept;
+    bool hasChild(Node* child) const noexcept;
     bool hasChild(const std::string& childIdentifier) const;
-    bool hasChildren() const;
-    
-    Node* getParent() const;
-    const std::list<std::unique_ptr<Node>>& getChildren() const;
+    bool hasChildren() const noexcept;
+
+    Node* getParent() const noexcept;
+    const std::list<std::unique_ptr<Node>>& getChildren() const noexcept;
     
     void setPosition(const glm::vec3& position, Coordinates coordinates = Coordinates::LOCAL);
     glm::vec3 getPosition(Coordinates coordinates = Coordinates::LOCAL) const;
@@ -63,7 +63,7 @@ public:
     void setScale(const glm::vec3& scaleVector);
     void setScale(float x, float y, float z);
     void setScale(float scaleFactor);
-    const glm::vec3& getScale() const;
+    const glm::vec3& getScale() const noexcept;
     
     const glm::mat4& getMatrix();
     const glm::mat4& getGlobalMatrix();
