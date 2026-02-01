@@ -446,7 +446,7 @@ TEST_F(NodeTests, checkConnections)
     EXPECT_TRUE(grandChild->hasChild(child));
     EXPECT_FALSE(grandChild->hasChild(grandChild));
     
-    grandChild->removeChild(child);
+    (void)grandChild->removeChild(child);
     
     EXPECT_FALSE(root->hasParent());
     EXPECT_FALSE(root->isChildOf(root.get()));
@@ -476,7 +476,7 @@ TEST_F(NodeTests, checkConnections)
     EXPECT_FALSE(grandChild->hasChild(child));
     EXPECT_FALSE(grandChild->hasChild(grandChild));
     
-    root->removeAllChildren();
+    (void)root->removeAllChildren();
     
     EXPECT_FALSE(root->hasParent());
     EXPECT_FALSE(root->isChildOf(root.get()));
@@ -567,7 +567,7 @@ TEST_F(NodeTests, checkIdentifier)
     EXPECT_EQ(root->getIdentifier(), rootIdentifier);
     EXPECT_TRUE(root->hasChild(childIdentifier));
 
-    root->removeChild(childIdentifier);
+    (void)root->removeChild(childIdentifier);
     EXPECT_FALSE(root->hasChild(childIdentifier));
 
 }

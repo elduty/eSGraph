@@ -10,31 +10,29 @@
 
 using namespace eSGraph;
 
-Node::Node() : mParent(nullptr), mMatrix(glm::identity<glm::mat4>()),mGlobalMatrix(glm::identity<glm::mat4>()), mPosition(glm::vec3()), mScale(glm::vec3(1.0)), mRotation(glm::identity<glm::quat>()), mGlobalMatrixDirty(true), mMatrixDirty(true)
+Node::Node() = default;
+
+Node::Node(std::string identifier)
+    : mIdentifier{std::move(identifier)}
 {
 }
 
-Node::Node(std::string identifier): Node()
-{
-    mIdentifier = std::move(identifier);
-}
-
-std::string Node::getIdentifier() const noexcept
+std::string_view Node::getIdentifier() const noexcept
 {
     return mIdentifier;
 }
 
-void Node::setIdentifier(const std::string& identifier)
+void Node::setIdentifier(std::string_view identifier)
 {
     mIdentifier = identifier;
 }
 
-bool Node::isChildOf(Node* parent) const noexcept
+bool Node::isChildOf(const Node* parent) const noexcept
 {
     return mParent == parent;
 }
 
-bool Node::isChildOf(const std::string& identifier) const noexcept
+bool Node::isChildOf(std::string_view identifier) const noexcept
 {
     return hasParent() && mParent->getIdentifier() == identifier;
 }
@@ -44,21 +42,20 @@ bool Node::hasChildren() const noexcept
     return !mChildren.empty();
 }
 
-bool Node::hasChild(Node* child) const noexcept
+bool Node::hasChild(const Node* child) const noexcept
 {
     return child != nullptr && child->getParent() == this;
 }
 
-bool Node::hasChild(const std::string& childIdentifier) const
+bool Node::hasChild(std::string_view childIdentifier) const
 {
-    for(auto&& childrenElement : mChildren)
+    for (const auto& childrenElement : mChildren)
     {
-        if(childrenElement.get()->getIdentifier() == childIdentifier)
+        if (childrenElement->getIdentifier() == childIdentifier)
         {
             return true;
         }
     }
-    
     return false;
 }
 
@@ -70,41 +67,37 @@ bool Node::hasParent() const noexcept
 void Node::addChild(std::unique_ptr<Node> child)
 {
     assert(!child->hasParent());
-    
+
     child->mParent = this;
     child->setGlobalMatrixDirty();
     mChildren.push_back(std::move(child));
 }
 
-std::unique_ptr<Node> Node::removeChild(const std::string& identifier)
+std::unique_ptr<Node> Node::removeChild(std::string_view identifier)
 {
     assert(hasChild(identifier));
-    
-    std::unique_ptr<Node> removedChild = nullptr;
-    
-    for(auto&& childrenElement : mChildren)
+
+    for (auto& childrenElement : mChildren)
     {
-        if(childrenElement.get()->getIdentifier() == identifier)
+        if (childrenElement->getIdentifier() == identifier)
         {
-            removedChild = removeChild(childrenElement.get());
-            break;
+            return removeChild(childrenElement.get());
         }
     }
-    
-    return removedChild;
+    return nullptr;
 }
 
 std::unique_ptr<Node> Node::removeChild(Node* child)
 {
-    std::unique_ptr<Node> returnElement = nullptr;
-    if(child->isChildOf(this))
+    std::unique_ptr<Node> returnElement;
+    if (child->isChildOf(this))
     {
         child->mParent = nullptr;
         child->setGlobalMatrixDirty();
-        
-        for(auto&& childrenElement : mChildren)
+
+        for (auto& childrenElement : mChildren)
         {
-            if(childrenElement.get() == child)
+            if (childrenElement.get() == child)
             {
                 returnElement = std::move(childrenElement);
                 mChildren.remove(childrenElement);
@@ -112,7 +105,6 @@ std::unique_ptr<Node> Node::removeChild(Node* child)
             }
         }
     }
-    
     return returnElement;
 }
 
@@ -130,12 +122,11 @@ std::unique_ptr<Node> Node::detach()
 
 std::list<std::unique_ptr<Node>> Node::removeAllChildren()
 {
-    for(auto&& child : mChildren)
+    for (auto& child : mChildren)
     {
         child->mParent = nullptr;
         child->setGlobalMatrixDirty();
     }
-    
     return std::move(mChildren);
 }
 
@@ -153,9 +144,9 @@ glm::vec3 Node::getPosition(Coordinates coordinates) const
 {
     switch (coordinates) {
         case Coordinates::WORLD:
-            if(hasParent())
+            if (hasParent())
                 return mParent->getGlobalMatrix() * glm::vec4(mPosition, 1.0);
-            // fall through - no parent means local = world
+            [[fallthrough]];
         case Coordinates::PARENT:
         case Coordinates::LOCAL:
         default:
@@ -167,19 +158,18 @@ void Node::setPosition(const glm::vec3& position, Coordinates coordinates)
 {
     switch (coordinates) {
         case Coordinates::WORLD:
-            if(hasParent())
+            if (hasParent())
             {
                 mPosition = glm::inverse(mParent->getGlobalMatrix()) * glm::vec4(position, 1.0f);
                 break;
             }
-            // fall through - no parent means local = world
+            [[fallthrough]];
         case Coordinates::PARENT:
         case Coordinates::LOCAL:
         default:
             mPosition = position;
             break;
     }
-
     setMatrixDirty();
 }
 
@@ -191,7 +181,6 @@ const glm::vec3& Node::getScale() const noexcept
 void Node::setScale(const glm::vec3& scaleVector)
 {
     mScale = scaleVector;
-    
     setMatrixDirty();
 }
 
@@ -209,11 +198,11 @@ glm::quat Node::getRotation(Coordinates coordinates) const
 {
     switch (coordinates) {
         case Coordinates::WORLD:
-            if(hasParent())
+            if (hasParent())
             {
                 return mParent->getRotation(Coordinates::WORLD) * mRotation;
             }
-            // fall through - no parent means local = world
+            [[fallthrough]];
         case Coordinates::PARENT:
         case Coordinates::LOCAL:
         default:
@@ -235,19 +224,18 @@ void Node::setRotation(const glm::quat& rotation, Coordinates coordinates)
 {
     switch (coordinates) {
         case Coordinates::WORLD:
-            if(hasParent())
+            if (hasParent())
             {
                 mRotation = glm::conjugate(mParent->getRotation(Coordinates::WORLD)) * glm::normalize(rotation);
                 break;
             }
-            // fall through - no parent means local = world
+            [[fallthrough]];
         case Coordinates::PARENT:
         case Coordinates::LOCAL:
         default:
             mRotation = glm::normalize(rotation);
             break;
     }
-
     setMatrixDirty();
 }
 
@@ -283,10 +271,11 @@ void Node::setGlobalMatrixDirty()
 
 const glm::mat4& Node::getMatrix()
 {
-    if(mMatrixDirty)
+    if (mMatrixDirty)
     {
-        mMatrix = glm::translate(glm::identity<glm::mat4>(), mPosition) * glm::mat4_cast(mRotation) * glm::scale(glm::identity<glm::mat4>(), mScale);
-        
+        mMatrix = glm::translate(glm::identity<glm::mat4>(), mPosition) *
+                  glm::mat4_cast(mRotation) *
+                  glm::scale(glm::identity<glm::mat4>(), mScale);
         mMatrixDirty = false;
     }
     return mMatrix;
@@ -294,16 +283,15 @@ const glm::mat4& Node::getMatrix()
 
 const glm::mat4& Node::getGlobalMatrix()
 {
-    if(mGlobalMatrixDirty)
+    if (mGlobalMatrixDirty)
     {
-        if(!hasParent())
+        if (!hasParent())
             mGlobalMatrix = getMatrix();
         else
             mGlobalMatrix = mParent->getGlobalMatrix() * getMatrix();
-        
+
         mGlobalMatrixDirty = false;
     }
-    
     return mGlobalMatrix;
 }
 
@@ -311,10 +299,8 @@ void Node::translate(const glm::vec3& translationVector, Coordinates coordinates
 {
     switch (coordinates) {
         case Coordinates::WORLD:
-            if(hasParent())
+            if (hasParent())
             {
-                // Get current world position, add translation, set back as world position
-                // This properly handles both parent rotation and scale
                 glm::vec3 currentWorldPos = getPosition(Coordinates::WORLD);
                 setPosition(currentWorldPos + translationVector, Coordinates::WORLD);
             }
@@ -324,7 +310,6 @@ void Node::translate(const glm::vec3& translationVector, Coordinates coordinates
             }
             break;
         case Coordinates::PARENT:
-            // Add translation directly without applying node's rotation
             setPosition(mPosition + translationVector);
             break;
         case Coordinates::LOCAL:
@@ -371,14 +356,12 @@ void Node::rotate(const glm::vec3& axis, float angle, Coordinates coordinates)
     switch (coordinates) {
         case Coordinates::WORLD:
         {
-            // Transform world axis to local space using conjugate of world rotation
             glm::vec3 localAxis = glm::conjugate(getRotation(Coordinates::WORLD)) * glm::normalize(axis);
             setRotation(glm::rotate(mRotation, angle, localAxis));
             break;
         }
         case Coordinates::PARENT:
         {
-            // Transform parent axis to local space using conjugate of local rotation
             glm::vec3 localAxis = glm::conjugate(mRotation) * glm::normalize(axis);
             setRotation(glm::rotate(mRotation, angle, localAxis));
             break;
