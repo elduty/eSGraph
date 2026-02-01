@@ -388,7 +388,7 @@ TEST_F(NodeTests, checkConnections)
     EXPECT_FALSE(grandChild->hasChild(child));
     EXPECT_FALSE(grandChild->hasChild(grandChild));
     
-    grandChild->detach().release()->attach(root.get());
+    root->addChild(grandChild->detach());
     
     EXPECT_FALSE(root->hasParent());
     EXPECT_FALSE(root->isChildOf(root.get()));
@@ -561,14 +561,60 @@ TEST_F(NodeTests, checkIdentifier)
 {
     std::string rootIdentifier = "ROOT";
     std::unique_ptr<Node> root = std::make_unique<Node>(rootIdentifier);
-    
+
     std::string childIdentifier = "CHILDREN";
     root->addChild(std::unique_ptr<Node>(new Node(childIdentifier)));
-    
+
     EXPECT_EQ(root->getIdentifier(), rootIdentifier);
     EXPECT_TRUE(root->hasChild(childIdentifier));
-    
+
     root->removeChild(childIdentifier);
     EXPECT_FALSE(root->hasChild(childIdentifier));
-    
+
+}
+
+TEST_F(NodeTests, checkHasChildWithNull)
+{
+    std::unique_ptr<Node> node = std::make_unique<Node>("NODE");
+    EXPECT_FALSE(node->hasChild(nullptr));
+}
+
+TEST_F(NodeTests, checkWorldRotation)
+{
+    std::unique_ptr<Node> parent = std::make_unique<Node>("PARENT");
+    Node* child = new Node("CHILD");
+    parent->addChild(std::unique_ptr<Node>(child));
+
+    glm::quat parentRot = glm::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::quat childRot = glm::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    parent->setRotation(parentRot);
+    child->setRotation(childRot);
+
+    glm::quat expectedWorld = parentRot * childRot;
+    glm::quat actualWorld = child->getRotation(Coordinates::WORLD);
+
+    // Compare quaternions (account for sign ambiguity: q and -q represent same rotation)
+    float dot = glm::dot(expectedWorld, actualWorld);
+    EXPECT_GT(std::abs(dot), 0.9999f);
+}
+
+TEST_F(NodeTests, checkWorldTranslateWithParentScale)
+{
+    std::unique_ptr<Node> parent = std::make_unique<Node>("PARENT");
+    Node* child = new Node("CHILD");
+    parent->addChild(std::unique_ptr<Node>(child));
+
+    parent->setScale(glm::vec3(2.0f));
+    child->setPosition(glm::vec3(0.0f));
+    child->translate(glm::vec3(2.0f, 0.0f, 0.0f), Coordinates::WORLD);
+
+    glm::vec3 worldPos = child->getPosition(Coordinates::WORLD);
+    EXPECT_FLOAT_EQ(worldPos.x, 2.0f);
+    EXPECT_FLOAT_EQ(worldPos.y, 0.0f);
+    EXPECT_FLOAT_EQ(worldPos.z, 0.0f);
+
+    glm::vec3 localPos = child->getPosition(Coordinates::LOCAL);
+    EXPECT_FLOAT_EQ(localPos.x, 1.0f);
+    EXPECT_FLOAT_EQ(localPos.y, 0.0f);
+    EXPECT_FLOAT_EQ(localPos.z, 0.0f);
 }

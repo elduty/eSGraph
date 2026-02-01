@@ -33,12 +33,12 @@ public:
     std::string getIdentifier() const;
     void setIdentifier(const std::string& identifier);
     
-    void addChild(const std::unique_ptr<Node> child);
+    void addChild(std::unique_ptr<Node> child);
     std::unique_ptr<Node> removeChild(Node* child);
     std::unique_ptr<Node> removeChild(const std::string& identifier);
     std::list<std::unique_ptr<Node>> removeAllChildren();
     
-    void attach(Node* parent);
+    static void attachTo(std::unique_ptr<Node> node, Node* parent);
     std::unique_ptr<Node> detach();
     
     bool isChildOf(Node* parent) const;

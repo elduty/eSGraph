@@ -45,7 +45,7 @@ bool Node::hasChildren() const
 
 bool Node::hasChild(Node* child) const
 {
-    return child->getParent() == this;
+    return child != nullptr && child->getParent() == this;
 }
 
 bool Node::hasChild(const std::string& childIdentifier) const
@@ -115,10 +115,10 @@ std::unique_ptr<Node> Node::removeChild(Node* child)
     return returnElement;
 }
 
-void Node::attach(Node* parent)
+void Node::attachTo(std::unique_ptr<Node> node, Node* parent)
 {
-    assert(!hasParent());
-    parent->addChild(std::unique_ptr<Node>(this));
+    assert(node && !node->hasParent());
+    parent->addChild(std::move(node));
 }
 
 std::unique_ptr<Node> Node::detach()
@@ -154,6 +154,7 @@ glm::vec3 Node::getPosition(Coordinates coordinates) const
         case Coordinates::WORLD:
             if(hasParent())
                 return mParent->getGlobalMatrix() * glm::vec4(mPosition, 1.0);
+            // fall through - no parent means local = world
         case Coordinates::LOCAL:
         default:
             return mPosition;
@@ -169,12 +170,13 @@ void Node::setPosition(const glm::vec3& position, Coordinates coordinates)
                 mPosition = glm::inverse(mParent->getGlobalMatrix()) * glm::vec4(position, 1.0f);
                 break;
             }
+            // fall through - no parent means local = world
         case Coordinates::LOCAL:
         default:
             mPosition = position;
             break;
     }
-    
+
     setMatrixDirty();
 }
 
@@ -205,7 +207,10 @@ glm::quat Node::getRotation(Coordinates coordinates) const
     switch (coordinates) {
         case Coordinates::WORLD:
             if(hasParent())
-                return mParent->getGlobalMatrix() * glm::mat4_cast(mRotation);
+            {
+                return mParent->getRotation(Coordinates::WORLD) * mRotation;
+            }
+            // fall through - no parent means local = world
         case Coordinates::LOCAL:
         default:
             return mRotation;
@@ -228,15 +233,16 @@ void Node::setRotation(const glm::quat& rotation, Coordinates coordinates)
         case Coordinates::WORLD:
             if(hasParent())
             {
-                mRotation = glm::inverse(mParent->getGlobalMatrix()) * glm::mat4_cast(glm::normalize(rotation));
+                mRotation = glm::inverse(mParent->getRotation(Coordinates::WORLD)) * glm::normalize(rotation);
                 break;
             }
+            // fall through - no parent means local = world
         case Coordinates::LOCAL:
         default:
             mRotation = glm::normalize(rotation);
             break;
     }
-    
+
     setMatrixDirty();
 }
 
@@ -293,8 +299,12 @@ void Node::translate(const glm::vec3& translationVector, Coordinates coordinates
         case Coordinates::WORLD:
             if(hasParent())
             {
-                setPosition(mPosition + glm::inverse(mParent->getRotation(Coordinates::WORLD)) * translationVector);
-            }else
+                // Get current world position, add translation, set back as world position
+                // This properly handles both parent rotation and scale
+                glm::vec3 currentWorldPos = getPosition(Coordinates::WORLD);
+                setPosition(currentWorldPos + translationVector, Coordinates::WORLD);
+            }
+            else
             {
                 setPosition(mPosition + translationVector);
             }
@@ -333,17 +343,21 @@ void Node::rotate(float xAngle, float yAngle, float zAngle, Coordinates coordina
 
 void Node::rotate(const glm::vec3& euler, Coordinates coordinates)
 {
-    rotate(glm::vec3(1.0f, 0.0f, 0.0f), euler.x);
-    rotate(glm::vec3(0.0f, 1.0f, 0.0f), euler.y);
-    rotate(glm::vec3(0.0f, 0.0f, 1.0f), euler.z);
+    rotate(glm::vec3(1.0f, 0.0f, 0.0f), euler.x, coordinates);
+    rotate(glm::vec3(0.0f, 1.0f, 0.0f), euler.y, coordinates);
+    rotate(glm::vec3(0.0f, 0.0f, 1.0f), euler.z, coordinates);
 }
 
 void Node::rotate(const glm::vec3& axis, float angle, Coordinates coordinates)
 {
     switch (coordinates) {
         case Coordinates::WORLD:
-                setRotation(glm::rotate(mRotation, angle, glm::normalize(axis) * getRotation(Coordinates::WORLD)));
-                break;
+        {
+            // Transform world axis to local space using inverse of world rotation
+            glm::vec3 localAxis = glm::inverse(getRotation(Coordinates::WORLD)) * glm::normalize(axis);
+            setRotation(glm::rotate(mRotation, angle, localAxis));
+            break;
+        }
         case Coordinates::LOCAL:
         default:
             setRotation(glm::rotate(mRotation, angle, glm::normalize(axis)));
