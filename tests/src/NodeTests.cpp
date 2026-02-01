@@ -8,8 +8,7 @@
 #include "NodeTests.hpp"
 #include "Node.hpp"
 #include <memory>
-#include "src/gtest-all.cc"
-#include "src/gtest_main.cc"
+#include <gtest/gtest.h>
 
 using namespace eSGraph;
 
