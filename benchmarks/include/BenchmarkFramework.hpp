@@ -13,9 +13,12 @@
 #include <string>
 #include <functional>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <iomanip>
 #include <algorithm>
 #include <numeric>
+#include <ctime>
 
 namespace eSGraph::Benchmark {
 
@@ -88,6 +91,184 @@ public:
 
     const std::vector<BenchmarkResult>& getResults() const {
         return mResults;
+    }
+
+    const BenchmarkConfig& getConfig() const {
+        return mConfig;
+    }
+
+    void generateMarkdownReport(const std::string& filepath) const {
+        std::ofstream file(filepath);
+        if (!file.is_open()) {
+            std::cerr << "Error: Could not open file for writing: " << filepath << "\n";
+            return;
+        }
+
+        // Get current timestamp
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        std::stringstream timestamp;
+        timestamp << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S");
+
+        // Header
+        file << "# eSGraph Performance Benchmark Report\n\n";
+        file << "**Generated:** " << timestamp.str() << "\n\n";
+
+        // Configuration
+        file << "## Configuration\n\n";
+        file << "| Parameter | Value |\n";
+        file << "|-----------|-------|\n";
+        file << "| Warmup Iterations | " << mConfig.warmupIterations << " |\n";
+        file << "| Measurement Iterations | " << mConfig.measureIterations << " |\n";
+        file << "| Repeat Count | " << mConfig.repeatCount << " |\n";
+#ifdef NDEBUG
+        file << "| Build Type | Release |\n";
+#else
+        file << "| Build Type | Debug |\n";
+#endif
+        file << "\n";
+
+        // Results table
+        file << "## Results\n\n";
+        file << "| Benchmark | Avg (us) | Min (us) | Max (us) | Ops/sec |\n";
+        file << "|-----------|----------|----------|----------|----------|\n";
+
+        for (const auto& result : mResults) {
+            file << "| " << result.name
+                 << " | " << std::fixed << std::setprecision(3) << result.avgMicroseconds
+                 << " | " << result.minMicroseconds
+                 << " | " << result.maxMicroseconds
+                 << " | " << std::setprecision(0) << result.opsPerSecond
+                 << " |\n";
+        }
+        file << "\n";
+
+        // Categorized results
+        file << "## Results by Category\n\n";
+
+        // Local Matrix Operations
+        file << "### Local Matrix Operations\n\n";
+        file << "| Benchmark | Avg (us) | Ops/sec |\n";
+        file << "|-----------|----------|----------|\n";
+        for (const auto& result : mResults) {
+            if (result.name.find("BM_GetMatrix") != std::string::npos) {
+                file << "| " << result.name
+                     << " | " << std::fixed << std::setprecision(3) << result.avgMicroseconds
+                     << " | " << std::setprecision(0) << result.opsPerSecond << " |\n";
+            }
+        }
+        file << "\n";
+
+        // Global Matrix Operations
+        file << "### Global Matrix Operations\n\n";
+        file << "| Benchmark | Avg (us) | Ops/sec |\n";
+        file << "|-----------|----------|----------|\n";
+        for (const auto& result : mResults) {
+            if (result.name.find("BM_GetGlobalMatrix") != std::string::npos) {
+                file << "| " << result.name
+                     << " | " << std::fixed << std::setprecision(3) << result.avgMicroseconds
+                     << " | " << std::setprecision(0) << result.opsPerSecond << " |\n";
+            }
+        }
+        file << "\n";
+
+        // World Coordinate Operations
+        file << "### World Coordinate Operations\n\n";
+        file << "| Benchmark | Avg (us) | Ops/sec |\n";
+        file << "|-----------|----------|----------|\n";
+        for (const auto& result : mResults) {
+            if ((result.name.find("Position") != std::string::npos ||
+                 result.name.find("Rotation") != std::string::npos) &&
+                result.name.find("BM_GetGlobalMatrix") == std::string::npos &&
+                result.name.find("BM_GetMatrix") == std::string::npos) {
+                file << "| " << result.name
+                     << " | " << std::fixed << std::setprecision(3) << result.avgMicroseconds
+                     << " | " << std::setprecision(0) << result.opsPerSecond << " |\n";
+            }
+        }
+        file << "\n";
+
+        // Dirty Flag Propagation
+        file << "### Dirty Flag Propagation\n\n";
+        file << "| Benchmark | Avg (us) | Ops/sec |\n";
+        file << "|-----------|----------|----------|\n";
+        for (const auto& result : mResults) {
+            if (result.name.find("DirtyPropagation") != std::string::npos) {
+                file << "| " << result.name
+                     << " | " << std::fixed << std::setprecision(3) << result.avgMicroseconds
+                     << " | " << std::setprecision(0) << result.opsPerSecond << " |\n";
+            }
+        }
+        file << "\n";
+
+        // Hierarchy Modifications
+        file << "### Hierarchy Modifications\n\n";
+        file << "| Benchmark | Avg (us) | Ops/sec |\n";
+        file << "|-----------|----------|----------|\n";
+        for (const auto& result : mResults) {
+            if (result.name.find("AddChild") != std::string::npos ||
+                result.name.find("RemoveChild") != std::string::npos) {
+                file << "| " << result.name
+                     << " | " << std::fixed << std::setprecision(3) << result.avgMicroseconds
+                     << " | " << std::setprecision(0) << result.opsPerSecond << " |\n";
+            }
+        }
+        file << "\n";
+
+        // Analysis section
+        file << "## Analysis\n\n";
+
+        // Find specific benchmarks for comparison
+        double cleanMatrix = 0, dirtyMatrix = 0;
+        double localRotation = 0, worldRotation = 0;
+        double localPosition = 0, worldPosition = 0;
+        double cachedGlobal = 0, deep100Global = 0;
+
+        for (const auto& result : mResults) {
+            if (result.name == "BM_GetMatrix_Clean") cleanMatrix = result.avgMicroseconds;
+            if (result.name == "BM_GetMatrix_Dirty") dirtyMatrix = result.avgMicroseconds;
+            if (result.name == "BM_SetRotation_Local") localRotation = result.avgMicroseconds;
+            if (result.name == "BM_SetRotation_World_DeepNode") worldRotation = result.avgMicroseconds;
+            if (result.name == "BM_SetPosition_Local") localPosition = result.avgMicroseconds;
+            if (result.name == "BM_SetPosition_World_DeepNode") worldPosition = result.avgMicroseconds;
+            if (result.name == "BM_GetGlobalMatrix_Cached") cachedGlobal = result.avgMicroseconds;
+            if (result.name == "BM_GetGlobalMatrix_DeepChain_100") deep100Global = result.avgMicroseconds;
+        }
+
+        file << "### Key Findings\n\n";
+
+        if (cleanMatrix > 0 && dirtyMatrix > 0) {
+            file << "- **Matrix Caching:** Clean matrix access is "
+                 << std::fixed << std::setprecision(1) << (dirtyMatrix / cleanMatrix)
+                 << "x faster than dirty recomputation\n";
+        }
+
+        if (localRotation > 0 && worldRotation > 0) {
+            file << "- **Rotation Overhead:** World rotation is "
+                 << std::fixed << std::setprecision(1) << (worldRotation / localRotation)
+                 << "x slower than local rotation\n";
+        }
+
+        if (localPosition > 0 && worldPosition > 0) {
+            file << "- **Position Overhead:** World position setting is "
+                 << std::fixed << std::setprecision(1) << (worldPosition / localPosition)
+                 << "x slower than local\n";
+        }
+
+        if (cachedGlobal > 0 && deep100Global > 0) {
+            file << "- **Hierarchy Depth Impact:** 100-level deep traversal is "
+                 << std::fixed << std::setprecision(0) << (deep100Global / cachedGlobal)
+                 << "x slower than cached access\n";
+        }
+
+        file << "\n### Recommendations\n\n";
+        file << "1. **Cache global matrices** when possible - repeated access is very fast\n";
+        file << "2. **Prefer local coordinates** for frequent transformations\n";
+        file << "3. **Minimize hierarchy depth** for performance-critical nodes\n";
+        file << "4. **Batch updates** to reduce dirty flag propagation overhead\n";
+
+        file.close();
+        std::cout << "Markdown report generated: " << filepath << "\n";
     }
 
 private:
