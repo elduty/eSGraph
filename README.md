@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/elduty/eSGraph.svg?branch=main)](https://travis-ci.org/elduty/eSGraph)
+[![CI](https://github.com/elduty/eSGraph/actions/workflows/ci.yml/badge.svg)](https://github.com/elduty/eSGraph/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/elduty/eSGraph/branch/main/graph/badge.svg)](https://codecov.io/gh/elduty/eSGraph)
 
 # eSGraph
 

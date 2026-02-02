@@ -14,6 +14,7 @@
 #include <string_view>
 #include <list>
 #include <memory>
+#include <functional>
 #include "glm/gtc/quaternion.hpp"
 
 namespace eSGraph {
@@ -52,6 +53,20 @@ public:
     [[nodiscard]] Node* getParent() const noexcept;
     [[nodiscard]] const std::list<std::unique_ptr<Node>>& getChildren() const noexcept;
 
+    // Hierarchy traversal
+    [[nodiscard]] Node* findByIdentifier(std::string_view identifier) const;
+    [[nodiscard]] Node* getRoot() noexcept;
+    [[nodiscard]] const Node* getRoot() const noexcept;
+    [[nodiscard]] size_t getDepth() const noexcept;
+    [[nodiscard]] Node* getNextSibling() const noexcept;
+    [[nodiscard]] Node* getPreviousSibling() const noexcept;
+
+    template<typename Visitor>
+    void traverse(Visitor&& visitor);
+
+    template<typename Visitor>
+    void traverse(Visitor&& visitor) const;
+
     void setPosition(const glm::vec3& position, Coordinates coordinates = Coordinates::LOCAL);
     [[nodiscard]] glm::vec3 getPosition(Coordinates coordinates = Coordinates::LOCAL) const;
 
@@ -80,6 +95,17 @@ public:
     void scale(float x, float y, float z);
     void scale(float scaleFactor);
 
+    // Direction vectors
+    [[nodiscard]] glm::vec3 getForward(Coordinates coordinates = Coordinates::WORLD) const;
+    [[nodiscard]] glm::vec3 getRight(Coordinates coordinates = Coordinates::WORLD) const;
+    [[nodiscard]] glm::vec3 getUp(Coordinates coordinates = Coordinates::WORLD) const;
+
+    // LookAt
+    void lookAt(const glm::vec3& target, const glm::vec3& up = glm::vec3(0.0f, 1.0f, 0.0f));
+
+    // Clone
+    [[nodiscard]] std::unique_ptr<Node> clone() const;
+
 protected:
     glm::mat4 mMatrix{glm::identity<glm::mat4>()};
     glm::mat4 mGlobalMatrix{glm::identity<glm::mat4>()};
@@ -95,6 +121,28 @@ protected:
     void setMatrixDirty();
     void setGlobalMatrixDirty();
 };
+
+// Template implementations
+template<typename Visitor>
+void Node::traverse(Visitor&& visitor)
+{
+    visitor(*this);
+    for (auto& child : mChildren)
+    {
+        child->traverse(std::forward<Visitor>(visitor));
+    }
+}
+
+template<typename Visitor>
+void Node::traverse(Visitor&& visitor) const
+{
+    visitor(*this);
+    for (const auto& child : mChildren)
+    {
+        child->traverse(std::forward<Visitor>(visitor));
+    }
+}
+
 }
 
 #endif /* Node_h */

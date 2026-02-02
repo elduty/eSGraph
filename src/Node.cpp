@@ -7,6 +7,7 @@
 
 #include "Node.hpp"
 #include <vector>
+#include <cmath>
 
 using namespace eSGraph;
 
@@ -138,6 +139,97 @@ Node* Node::getParent() const noexcept
 const std::list<std::unique_ptr<Node>>& Node::getChildren() const noexcept
 {
     return mChildren;
+}
+
+Node* Node::findByIdentifier(std::string_view identifier) const
+{
+    for (const auto& child : mChildren)
+    {
+        if (child->getIdentifier() == identifier)
+        {
+            return child.get();
+        }
+        if (Node* found = child->findByIdentifier(identifier))
+        {
+            return found;
+        }
+    }
+    return nullptr;
+}
+
+Node* Node::getRoot() noexcept
+{
+    Node* current = this;
+    while (current->mParent != nullptr)
+    {
+        current = current->mParent;
+    }
+    return current;
+}
+
+const Node* Node::getRoot() const noexcept
+{
+    const Node* current = this;
+    while (current->mParent != nullptr)
+    {
+        current = current->mParent;
+    }
+    return current;
+}
+
+size_t Node::getDepth() const noexcept
+{
+    size_t depth = 0;
+    const Node* current = this;
+    while (current->mParent != nullptr)
+    {
+        ++depth;
+        current = current->mParent;
+    }
+    return depth;
+}
+
+Node* Node::getNextSibling() const noexcept
+{
+    if (!mParent)
+    {
+        return nullptr;
+    }
+
+    const auto& siblings = mParent->mChildren;
+    for (auto it = siblings.begin(); it != siblings.end(); ++it)
+    {
+        if (it->get() == this)
+        {
+            ++it;
+            if (it != siblings.end())
+            {
+                return it->get();
+            }
+            return nullptr;
+        }
+    }
+    return nullptr;
+}
+
+Node* Node::getPreviousSibling() const noexcept
+{
+    if (!mParent)
+    {
+        return nullptr;
+    }
+
+    const auto& siblings = mParent->mChildren;
+    Node* previous = nullptr;
+    for (const auto& sibling : siblings)
+    {
+        if (sibling.get() == this)
+        {
+            return previous;
+        }
+        previous = sibling.get();
+    }
+    return nullptr;
 }
 
 glm::vec3 Node::getPosition(Coordinates coordinates) const
@@ -371,4 +463,59 @@ void Node::rotate(const glm::vec3& axis, float angle, Coordinates coordinates)
             setRotation(glm::rotate(mRotation, angle, glm::normalize(axis)));
             break;
     }
+}
+
+glm::vec3 Node::getForward(Coordinates coordinates) const
+{
+    glm::quat rotation = getRotation(coordinates);
+    return rotation * glm::vec3(0.0f, 0.0f, -1.0f);
+}
+
+glm::vec3 Node::getRight(Coordinates coordinates) const
+{
+    glm::quat rotation = getRotation(coordinates);
+    return rotation * glm::vec3(1.0f, 0.0f, 0.0f);
+}
+
+glm::vec3 Node::getUp(Coordinates coordinates) const
+{
+    glm::quat rotation = getRotation(coordinates);
+    return rotation * glm::vec3(0.0f, 1.0f, 0.0f);
+}
+
+void Node::lookAt(const glm::vec3& target, const glm::vec3& up)
+{
+    glm::vec3 worldPos = getPosition(Coordinates::WORLD);
+    glm::vec3 direction = glm::normalize(target - worldPos);
+
+    if (glm::length(direction) < 1e-6f)
+    {
+        return;
+    }
+
+    glm::vec3 right = glm::normalize(glm::cross(up, -direction));
+    glm::vec3 correctedUp = glm::cross(-direction, right);
+
+    glm::mat3 rotationMatrix(right, correctedUp, -direction);
+    glm::quat worldRotation = glm::quat_cast(rotationMatrix);
+
+    setRotation(worldRotation, Coordinates::WORLD);
+}
+
+std::unique_ptr<Node> Node::clone() const
+{
+    auto cloned = std::make_unique<Node>(mIdentifier);
+
+    cloned->mPosition = mPosition;
+    cloned->mRotation = mRotation;
+    cloned->mScale = mScale;
+    cloned->mMatrixDirty = true;
+    cloned->mGlobalMatrixDirty = true;
+
+    for (const auto& child : mChildren)
+    {
+        cloned->addChild(child->clone());
+    }
+
+    return cloned;
 }
