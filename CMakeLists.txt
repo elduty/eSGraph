@@ -18,3 +18,9 @@ if(BUILD_TESTS)
     add_subdirectory(external/googletest)
     add_subdirectory(tests)
 endif()
+
+# Benchmarks
+option(BUILD_BENCHMARKS "Build performance benchmarks" OFF)
+if(BUILD_BENCHMARKS)
+    add_subdirectory(benchmarks)
+endif()
