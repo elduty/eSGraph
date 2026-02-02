@@ -1,7 +1,10 @@
 language: cpp
 compiler: clang
 
-script:
-  - make
+before_script:
+  - git submodule update --init --recursive
+  - mkdir -p build && cd build && cmake ..
 
-after_success:
+script:
+  - cd build && make
+  - cd build && ctest --output-on-failure
