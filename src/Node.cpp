@@ -96,12 +96,12 @@ std::unique_ptr<Node> Node::removeChild(Node* child)
         child->mParent = nullptr;
         child->setGlobalMatrixDirty();
 
-        for (auto& childrenElement : mChildren)
+        for (auto it = mChildren.begin(); it != mChildren.end(); ++it)
         {
-            if (childrenElement.get() == child)
+            if (it->get() == child)
             {
-                returnElement = std::move(childrenElement);
-                mChildren.remove(childrenElement);
+                returnElement = std::move(*it);
+                mChildren.erase(it);
                 break;
             }
         }
