@@ -407,7 +407,138 @@ void registerRotationBenchmarks() {
 }
 
 // ============================================================================
-// 6. Hierarchy Modifications
+// 6. Direction Vector Operations (tests cached world rotation)
+// ============================================================================
+
+void registerDirectionVectorBenchmarks() {
+    // BM_GetForward_World_DeepNode - Uses cached world rotation
+    BenchmarkRunner::instance().registerBenchmark(
+        "BM_GetForward_World_DeepNode",
+        []() {
+            auto forward = g_targetNode->getForward(Coordinates::WORLD);
+            DoNotOptimize(forward);
+        },
+        []() {
+            g_root = buildDeepHierarchy(DEEP_MEDIUM);
+            g_targetNode = getDeepestNode(g_root.get());
+            // Apply rotations to the hierarchy
+            Node* current = g_root.get();
+            float angle = 0.1f;
+            while (current) {
+                current->setRotation(glm::vec3(0.0f, 1.0f, 0.0f), angle);
+                if (current->hasChildren()) {
+                    current = current->getChildren().front().get();
+                } else {
+                    break;
+                }
+                angle += 0.1f;
+            }
+        },
+        []() {
+            g_root.reset();
+            g_targetNode = nullptr;
+        }
+    );
+
+    // BM_GetForward_Local - Baseline
+    BenchmarkRunner::instance().registerBenchmark(
+        "BM_GetForward_Local",
+        []() {
+            auto forward = g_targetNode->getForward(Coordinates::LOCAL);
+            DoNotOptimize(forward);
+        },
+        []() {
+            g_root = buildDeepHierarchy(DEEP_MEDIUM);
+            g_targetNode = getDeepestNode(g_root.get());
+        },
+        []() {
+            g_root.reset();
+            g_targetNode = nullptr;
+        }
+    );
+
+    // BM_GetAllDirections_World - Tests batch direction vectors
+    BenchmarkRunner::instance().registerBenchmark(
+        "BM_GetAllDirections_World",
+        []() {
+            auto directions = g_targetNode->getDirections(Coordinates::WORLD);
+            DoNotOptimize(directions);
+        },
+        []() {
+            g_root = buildDeepHierarchy(DEEP_MEDIUM);
+            g_targetNode = getDeepestNode(g_root.get());
+            Node* current = g_root.get();
+            float angle = 0.1f;
+            while (current) {
+                current->setRotation(glm::vec3(0.0f, 1.0f, 0.0f), angle);
+                if (current->hasChildren()) {
+                    current = current->getChildren().front().get();
+                } else {
+                    break;
+                }
+                angle += 0.1f;
+            }
+        },
+        []() {
+            g_root.reset();
+            g_targetNode = nullptr;
+        }
+    );
+
+    // BM_GetThreeDirections_Separate - Compare to batch
+    BenchmarkRunner::instance().registerBenchmark(
+        "BM_GetThreeDirections_Separate",
+        []() {
+            auto forward = g_targetNode->getForward(Coordinates::WORLD);
+            auto right = g_targetNode->getRight(Coordinates::WORLD);
+            auto up = g_targetNode->getUp(Coordinates::WORLD);
+            DoNotOptimize(forward);
+            DoNotOptimize(right);
+            DoNotOptimize(up);
+        },
+        []() {
+            g_root = buildDeepHierarchy(DEEP_MEDIUM);
+            g_targetNode = getDeepestNode(g_root.get());
+            Node* current = g_root.get();
+            float angle = 0.1f;
+            while (current) {
+                current->setRotation(glm::vec3(0.0f, 1.0f, 0.0f), angle);
+                if (current->hasChildren()) {
+                    current = current->getChildren().front().get();
+                } else {
+                    break;
+                }
+                angle += 0.1f;
+            }
+        },
+        []() {
+            g_root.reset();
+            g_targetNode = nullptr;
+        }
+    );
+
+    // BM_GetWorldRotation_Cached - Tests getRotation with cached world rotation
+    BenchmarkRunner::instance().registerBenchmark(
+        "BM_GetWorldRotation_Cached",
+        []() {
+            auto rot = g_targetNode->getRotation(Coordinates::WORLD);
+            DoNotOptimize(rot);
+        },
+        []() {
+            g_root = buildDeepHierarchy(DEEP_MEDIUM);
+            g_targetNode = getDeepestNode(g_root.get());
+            // Pre-warm the cache
+            (void)g_targetNode->getForward(Coordinates::WORLD);
+        },
+        []() {
+            g_root.reset();
+            g_targetNode = nullptr;
+        }
+    );
+}
+
+// ============================================================================
+// 7. Hierarchy Modifications
 // ============================================================================
 
 void registerHierarchyModificationBenchmarks() {
@@ -458,6 +589,7 @@ void registerAllBenchmarks() {
     registerWorldCoordinateBenchmarks();
     registerDirtyPropagationBenchmarks();
     registerRotationBenchmarks();
+    registerDirectionVectorBenchmarks();
     registerHierarchyModificationBenchmarks();
 }
 

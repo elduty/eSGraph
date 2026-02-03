@@ -9,9 +9,11 @@ A lightweight, high-performance C++ scene graph library built on [GLM](http://gl
 
 - **Hierarchical Scene Graph** - Parent-child node relationships with automatic transform propagation
 - **Multiple Coordinate Spaces** - LOCAL, PARENT, and WORLD coordinate systems
-- **Efficient Caching** - Lazy matrix computation with dirty flag optimization
+- **High Performance** - Optimized dirty flag propagation, cache-friendly memory layout, inlined hot paths
+- **Efficient Caching** - Lazy matrix computation with dirty flags, cached world rotation for direction vectors
 - **Modern C++20** - Uses smart pointers, move semantics, and modern language features
 - **Minimal Dependencies** - Only requires GLM (header-only)
+- **SIMD Support** - Optional GLM SIMD optimizations via CMake
 - **Well Tested** - Comprehensive test suite using Google Test
 
 ## Quick Start
@@ -60,11 +62,17 @@ make
 |--------|---------|-------------|
 | `BUILD_TESTS` | ON | Build unit tests |
 | `BUILD_BENCHMARKS` | OFF | Build performance benchmarks |
+| `ENABLE_GLM_SIMD` | ON | Enable GLM SIMD intrinsics (AVX/SSE4.1) |
+| `ENABLE_ASAN` | OFF | Enable AddressSanitizer |
+| `ENABLE_COVERAGE` | OFF | Enable code coverage |
 
 ```bash
 # Build with benchmarks
 cmake -DBUILD_BENCHMARKS=ON -DCMAKE_BUILD_TYPE=Release ..
 make
+
+# Build without SIMD (for compatibility)
+cmake -DENABLE_GLM_SIMD=OFF ..
 ```
 
 ## API Overview
@@ -127,9 +135,52 @@ const glm::mat4& local = node->getMatrix();
 const glm::mat4& world = node->getGlobalMatrix();
 ```
 
+### Direction Vectors
+
+```cpp
+// Individual direction vectors (uses cached world rotation for WORLD coords)
+glm::vec3 forward = node->getForward(Coordinates::WORLD);
+glm::vec3 right = node->getRight(Coordinates::WORLD);
+glm::vec3 up = node->getUp(Coordinates::WORLD);
+
+// Batch query - more efficient when you need all three
+DirectionVectors dirs = node->getDirections(Coordinates::WORLD);
+// dirs.forward, dirs.right, dirs.up
+
+// Look at a target point
+node->lookAt(glm::vec3(0.0f, 0.0f, -10.0f));
+```
+
+### Hierarchy Traversal
+
+```cpp
+// Find nodes
+Node* found = root->findByIdentifier("player");
+Node* rootNode = node->getRoot();
+size_t depth = node->getDepth();
+
+// Sibling navigation
+Node* next = node->getNextSibling();
+Node* prev = node->getPreviousSibling();
+
+// Traverse entire hierarchy
+root->traverse([](Node& n) {
+    std::cout << n.getIdentifier() << std::endl;
+});
+
+// Clone a hierarchy (deep copy)
+auto cloned = root->clone();
+```
+
 ## Performance
 
-eSGraph uses lazy evaluation with dirty flags for optimal performance. Matrices are only recomputed when transformations change.
+eSGraph uses lazy evaluation with dirty flags for optimal performance:
+
+- **Thread-local stack** for dirty propagation with early-exit optimization
+- **Cache-friendly memory layout** with hot data (dirty flags, parent pointer) placed first
+- **Inlined trivial getters** for zero-overhead access
+- **`std::vector` children container** for cache-friendly iteration
+- **Cached world rotation** for fast direction vector queries
 
 ### Benchmarks
 
@@ -141,19 +192,24 @@ make
 ./benchmarks/run_benchmarks
 ```
 
-This generates a detailed report at `benchmark_report.md`. See [benchmark_report.md](benchmark_report.md) for latest results.
+This generates a detailed report at `benchmark_report.md`.
 
 #### Key Performance Characteristics
 
-| Operation | Typical Performance |
-|-----------|---------------------|
-| Cached matrix access | ~750M ops/sec |
-| Matrix recomputation | ~34M ops/sec |
-| Local position set | ~91M ops/sec |
-| World position set | ~62M ops/sec |
-| Deep hierarchy traversal (100 levels) | ~874K ops/sec |
+| Operation | Performance | Notes |
+|-----------|-------------|-------|
+| Cached matrix access | ~714M ops/sec | No recomputation needed |
+| Matrix recomputation | ~59M ops/sec | After transform change |
+| Local position/rotation set | ~280M ops/sec | Inlined, minimal overhead |
+| World position set | ~110M ops/sec | Requires parent matrix inverse |
+| Direction vectors (world) | ~490M ops/sec | Uses cached world rotation |
+| Batch directions | ~283M ops/sec | 41% faster than 3 separate calls |
+| AddChild | ~46M ops/sec | Vector push_back |
+| RemoveChild | ~6.8M ops/sec | Vector erase |
+| Dirty propagation (1K flat) | ~150K ops/sec | Early-exit optimization |
+| Dirty propagation (32K tree) | ~3.3M ops/sec | Skips already-dirty subtrees |
 
-> Benchmarks run on Release build. Results vary by hardware.
+> Benchmarks on Apple Silicon, Release build. Results vary by hardware.
 
 ## Testing
 
@@ -184,6 +240,34 @@ eSGraph/
 └── external/
     ├── glm/              # GLM submodule
     └── googletest/       # Google Test submodule
+```
+
+## API Notes
+
+### Children Container
+
+Children are stored in a `std::vector<std::unique_ptr<Node>>` for cache-friendly iteration. Methods return vector references:
+
+```cpp
+const std::vector<std::unique_ptr<Node>>& children = node->getChildren();
+std::vector<std::unique_ptr<Node>> removed = node->removeAllChildren();
+```
+
+### Ownership
+
+- `addChild()` takes ownership via `std::unique_ptr`
+- `removeChild()` and `removeAllChildren()` return ownership to caller
+- **Important:** If you discard the returned `unique_ptr`, the node is deleted immediately
+
+```cpp
+// Wrong - node deleted, subsequent access is undefined behavior
+auto child = parent->getChildren().front().get();
+(void)parent->removeChild(child);
+child->doSomething();  // UB!
+
+// Correct - ownership preserved
+auto removed = parent->removeChild(child);
+child->doSomething();  // Safe - removed keeps it alive
 ```
 
 ## License

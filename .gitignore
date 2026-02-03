@@ -34,3 +34,6 @@ build/
 *.out
 *.app
 .depend
+BENCHMARK_COMPARISON_REPORT.md
+benchmark_optimized.md
+benchmark_original.md

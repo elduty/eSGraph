@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Options
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
+option(ENABLE_GLM_SIMD "Enable GLM SIMD optimizations" ON)
 
 # Main library
 add_library(eSGraph STATIC src/Node.cpp)
@@ -22,6 +23,23 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
     target_compile_options(eSGraph PRIVATE -Wall -Wextra -Wpedantic)
 elseif(MSVC)
     target_compile_options(eSGraph PRIVATE /W4)
+endif()
+
+# GLM SIMD optimizations
+if(ENABLE_GLM_SIMD)
+    target_compile_definitions(eSGraph PUBLIC GLM_FORCE_INTRINSICS)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+        include(CheckCXXCompilerFlag)
+        check_cxx_compiler_flag("-mavx" COMPILER_SUPPORTS_AVX)
+        check_cxx_compiler_flag("-msse4.1" COMPILER_SUPPORTS_SSE41)
+        if(COMPILER_SUPPORTS_AVX)
+            target_compile_options(eSGraph PUBLIC -mavx)
+        elseif(COMPILER_SUPPORTS_SSE41)
+            target_compile_options(eSGraph PUBLIC -msse4.1)
+        endif()
+    elseif(MSVC)
+        target_compile_options(eSGraph PUBLIC /arch:AVX)
+    endif()
 endif()
 
 # AddressSanitizer

@@ -18,11 +18,6 @@ Node::Node(std::string identifier)
 {
 }
 
-std::string_view Node::getIdentifier() const noexcept
-{
-    return mIdentifier;
-}
-
 void Node::setIdentifier(std::string_view identifier)
 {
     mIdentifier = identifier;
@@ -36,11 +31,6 @@ bool Node::isChildOf(const Node* parent) const noexcept
 bool Node::isChildOf(std::string_view identifier) const noexcept
 {
     return hasParent() && mParent->getIdentifier() == identifier;
-}
-
-bool Node::hasChildren() const noexcept
-{
-    return !mChildren.empty();
 }
 
 bool Node::hasChild(const Node* child) const noexcept
@@ -58,11 +48,6 @@ bool Node::hasChild(std::string_view childIdentifier) const
         }
     }
     return false;
-}
-
-bool Node::hasParent() const noexcept
-{
-    return mParent != nullptr;
 }
 
 void Node::addChild(std::unique_ptr<Node> child)
@@ -121,7 +106,7 @@ std::unique_ptr<Node> Node::detach()
     return mParent->removeChild(this);
 }
 
-std::list<std::unique_ptr<Node>> Node::removeAllChildren()
+std::vector<std::unique_ptr<Node>> Node::removeAllChildren()
 {
     for (auto& child : mChildren)
     {
@@ -131,12 +116,7 @@ std::list<std::unique_ptr<Node>> Node::removeAllChildren()
     return std::move(mChildren);
 }
 
-Node* Node::getParent() const noexcept
-{
-    return mParent;
-}
-
-const std::list<std::unique_ptr<Node>>& Node::getChildren() const noexcept
+const std::vector<std::unique_ptr<Node>>& Node::getChildren() const noexcept
 {
     return mChildren;
 }
@@ -265,11 +245,6 @@ void Node::setPosition(const glm::vec3& position, Coordinates coordinates)
     setMatrixDirty();
 }
 
-const glm::vec3& Node::getScale() const noexcept
-{
-    return mScale;
-}
-
 void Node::setScale(const glm::vec3& scaleVector)
 {
     mScale = scaleVector;
@@ -344,7 +319,9 @@ void Node::setMatrixDirty()
 
 void Node::setGlobalMatrixDirty()
 {
-    std::vector<Node*> stack;
+    thread_local std::vector<Node*> stack;
+    stack.clear();
+    stack.reserve(64);
     stack.push_back(this);
 
     while (!stack.empty())
@@ -352,13 +329,34 @@ void Node::setGlobalMatrixDirty()
         Node* current = stack.back();
         stack.pop_back();
 
+        if (current->mGlobalMatrixDirty)
+            continue;  // Skip already-dirty subtrees
+
         current->mGlobalMatrixDirty = true;
+        current->mWorldRotationDirty = true;
 
         for (auto& child : current->mChildren)
         {
             stack.push_back(child.get());
         }
     }
+}
+
+const glm::quat& Node::getWorldRotationCached() const
+{
+    if (mWorldRotationDirty)
+    {
+        if (!hasParent())
+        {
+            mWorldRotation = mRotation;
+        }
+        else
+        {
+            mWorldRotation = mParent->getWorldRotationCached() * mRotation;
+        }
+        mWorldRotationDirty = false;
+    }
+    return mWorldRotation;
 }
 
 const glm::mat4& Node::getMatrix()
@@ -467,20 +465,38 @@ void Node::rotate(const glm::vec3& axis, float angle, Coordinates coordinates)
 
 glm::vec3 Node::getForward(Coordinates coordinates) const
 {
-    glm::quat rotation = getRotation(coordinates);
+    const glm::quat& rotation = (coordinates == Coordinates::WORLD)
+        ? getWorldRotationCached()
+        : getRotation(coordinates);
     return rotation * glm::vec3(0.0f, 0.0f, -1.0f);
 }
 
 glm::vec3 Node::getRight(Coordinates coordinates) const
 {
-    glm::quat rotation = getRotation(coordinates);
+    const glm::quat& rotation = (coordinates == Coordinates::WORLD)
+        ? getWorldRotationCached()
+        : getRotation(coordinates);
     return rotation * glm::vec3(1.0f, 0.0f, 0.0f);
 }
 
 glm::vec3 Node::getUp(Coordinates coordinates) const
 {
-    glm::quat rotation = getRotation(coordinates);
+    const glm::quat& rotation = (coordinates == Coordinates::WORLD)
+        ? getWorldRotationCached()
+        : getRotation(coordinates);
     return rotation * glm::vec3(0.0f, 1.0f, 0.0f);
+}
+
+DirectionVectors Node::getDirections(Coordinates coordinates) const
+{
+    const glm::quat& rotation = (coordinates == Coordinates::WORLD)
+        ? getWorldRotationCached()
+        : getRotation(coordinates);
+    return {
+        rotation * glm::vec3(0.0f, 0.0f, -1.0f),  // forward
+        rotation * glm::vec3(1.0f, 0.0f, 0.0f),   // right
+        rotation * glm::vec3(0.0f, 1.0f, 0.0f)    // up
+    };
 }
 
 void Node::lookAt(const glm::vec3& target, const glm::vec3& up)

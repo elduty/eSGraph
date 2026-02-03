@@ -12,7 +12,7 @@
 
 #include <string>
 #include <string_view>
-#include <list>
+#include <vector>
 #include <memory>
 #include <functional>
 #include "glm/gtc/quaternion.hpp"
@@ -25,6 +25,13 @@ enum class Coordinates
     WORLD
 };
 
+struct DirectionVectors
+{
+    glm::vec3 forward;
+    glm::vec3 right;
+    glm::vec3 up;
+};
+
 class Node
 {
 public:
@@ -32,26 +39,26 @@ public:
     explicit Node(std::string identifier);
     virtual ~Node() = default;
 
-    [[nodiscard]] std::string_view getIdentifier() const noexcept;
+    [[nodiscard]] std::string_view getIdentifier() const noexcept { return mIdentifier; }
     void setIdentifier(std::string_view identifier);
 
     void addChild(std::unique_ptr<Node> child);
     [[nodiscard]] std::unique_ptr<Node> removeChild(Node* child);
     [[nodiscard]] std::unique_ptr<Node> removeChild(std::string_view identifier);
-    [[nodiscard]] std::list<std::unique_ptr<Node>> removeAllChildren();
+    [[nodiscard]] std::vector<std::unique_ptr<Node>> removeAllChildren();
 
     static void attachTo(std::unique_ptr<Node> node, Node* parent);
     [[nodiscard]] std::unique_ptr<Node> detach();
 
     [[nodiscard]] bool isChildOf(const Node* parent) const noexcept;
     [[nodiscard]] bool isChildOf(std::string_view identifier) const noexcept;
-    [[nodiscard]] bool hasParent() const noexcept;
+    [[nodiscard]] bool hasParent() const noexcept { return mParent != nullptr; }
     [[nodiscard]] bool hasChild(const Node* child) const noexcept;
     [[nodiscard]] bool hasChild(std::string_view childIdentifier) const;
-    [[nodiscard]] bool hasChildren() const noexcept;
+    [[nodiscard]] bool hasChildren() const noexcept { return !mChildren.empty(); }
 
-    [[nodiscard]] Node* getParent() const noexcept;
-    [[nodiscard]] const std::list<std::unique_ptr<Node>>& getChildren() const noexcept;
+    [[nodiscard]] Node* getParent() const noexcept { return mParent; }
+    [[nodiscard]] const std::vector<std::unique_ptr<Node>>& getChildren() const noexcept;
 
     // Hierarchy traversal
     [[nodiscard]] Node* findByIdentifier(std::string_view identifier) const;
@@ -79,7 +86,7 @@ public:
     void setScale(const glm::vec3& scaleVector);
     void setScale(float x, float y, float z);
     void setScale(float scaleFactor);
-    [[nodiscard]] const glm::vec3& getScale() const noexcept;
+    [[nodiscard]] const glm::vec3& getScale() const noexcept { return mScale; }
 
     [[nodiscard]] const glm::mat4& getMatrix();
     [[nodiscard]] const glm::mat4& getGlobalMatrix();
@@ -99,6 +106,7 @@ public:
     [[nodiscard]] glm::vec3 getForward(Coordinates coordinates = Coordinates::WORLD) const;
     [[nodiscard]] glm::vec3 getRight(Coordinates coordinates = Coordinates::WORLD) const;
     [[nodiscard]] glm::vec3 getUp(Coordinates coordinates = Coordinates::WORLD) const;
+    [[nodiscard]] DirectionVectors getDirections(Coordinates coordinates = Coordinates::WORLD) const;
 
     // LookAt
     void lookAt(const glm::vec3& target, const glm::vec3& up = glm::vec3(0.0f, 1.0f, 0.0f));
@@ -107,19 +115,29 @@ public:
     [[nodiscard]] std::unique_ptr<Node> clone() const;
 
 protected:
+    // Hot path - checked frequently
+    Node* mParent{nullptr};
+    bool mMatrixDirty{true};
+    bool mGlobalMatrixDirty{true};
+    mutable bool mWorldRotationDirty{true};
+
+    // Transform data
+    glm::vec3 mPosition{0.0f};
+    glm::quat mRotation{glm::identity<glm::quat>()};
+    glm::vec3 mScale{1.0f};
+
+    // Cached matrices and rotations (large, less frequent writes)
     glm::mat4 mMatrix{glm::identity<glm::mat4>()};
     glm::mat4 mGlobalMatrix{glm::identity<glm::mat4>()};
-    glm::quat mRotation{glm::identity<glm::quat>()};
-    glm::vec3 mPosition{0.0f};
-    glm::vec3 mScale{1.0f};
+    mutable glm::quat mWorldRotation{glm::identity<glm::quat>()};
+
+    // Cold data
     std::string mIdentifier;
-    std::list<std::unique_ptr<Node>> mChildren;
-    Node* mParent{nullptr};
-    bool mGlobalMatrixDirty{true};
-    bool mMatrixDirty{true};
+    std::vector<std::unique_ptr<Node>> mChildren;
 
     void setMatrixDirty();
     void setGlobalMatrixDirty();
+    [[nodiscard]] const glm::quat& getWorldRotationCached() const;
 };
 
 // Template implementations

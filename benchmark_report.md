@@ -1,6 +1,6 @@
 # eSGraph Performance Benchmark Report
 
-**Generated:** 2026-02-02 23:10:13
+**Generated:** 2026-02-03 21:05:04
 
 ## Configuration
 
@@ -15,27 +15,32 @@
 
 | Benchmark | Avg (us) | Min (us) | Max (us) | Ops/sec |
 |-----------|----------|----------|----------|----------|
-| BM_GetMatrix_Clean | 0.003 | 0.003 | 0.003 | 374181478 |
-| BM_GetMatrix_Dirty | 0.029 | 0.026 | 0.034 | 34235836 |
-| BM_GetGlobalMatrix_RootNode | 0.002 | 0.002 | 0.003 | 481932356 |
-| BM_GetGlobalMatrix_DeepChain_10 | 0.144 | 0.139 | 0.148 | 6940268 |
-| BM_GetGlobalMatrix_DeepChain_50 | 0.644 | 0.594 | 0.691 | 1551968 |
-| BM_GetGlobalMatrix_DeepChain_100 | 1.144 | 1.076 | 1.190 | 873804 |
-| BM_GetGlobalMatrix_Cached | 0.001 | 0.001 | 0.001 | 750931155 |
-| BM_SetPosition_Local | 0.011 | 0.010 | 0.011 | 91150889 |
-| BM_SetPosition_World_DeepNode | 0.016 | 0.016 | 0.016 | 62522899 |
-| BM_GetPosition_World_DeepNode | 0.002 | 0.002 | 0.002 | 491593747 |
-| BM_DirtyPropagation_Flat_100 | 0.637 | 0.623 | 0.650 | 1570358 |
-| BM_DirtyPropagation_Flat_1000 | 7.507 | 7.384 | 7.729 | 133205 |
-| BM_DirtyPropagation_Flat_10000 | 76.116 | 75.335 | 76.830 | 13138 |
-| BM_DirtyPropagation_Deep_100 | 1.071 | 1.055 | 1.084 | 933937 |
-| BM_DirtyPropagation_BinaryTree_10 | 1.707 | 1.633 | 1.747 | 585687 |
-| BM_DirtyPropagation_BinaryTree_15 | 52.414 | 51.889 | 52.943 | 19079 |
-| BM_GetRotation_World_DeepNode | 0.219 | 0.217 | 0.222 | 4567027 |
-| BM_SetRotation_World_DeepNode | 0.181 | 0.179 | 0.186 | 5509743 |
-| BM_SetRotation_Local | 0.010 | 0.010 | 0.010 | 97521396 |
-| BM_AddChild | 0.027 | 0.027 | 0.028 | 36661380 |
-| BM_RemoveChild | 1.434 | 1.408 | 1.456 | 697431 |
+| BM_GetMatrix_Clean | 0.002 | 0.002 | 0.002 | 429800658 |
+| BM_GetMatrix_Dirty | 0.017 | 0.017 | 0.017 | 58527929 |
+| BM_GetGlobalMatrix_RootNode | 0.002 | 0.002 | 0.002 | 603318250 |
+| BM_GetGlobalMatrix_DeepChain_10 | 0.115 | 0.113 | 0.116 | 8726763 |
+| BM_GetGlobalMatrix_DeepChain_50 | 0.586 | 0.563 | 0.597 | 1707835 |
+| BM_GetGlobalMatrix_DeepChain_100 | 1.058 | 1.048 | 1.079 | 945358 |
+| BM_GetGlobalMatrix_Cached | 0.001 | 0.001 | 0.002 | 714275510 |
+| BM_SetPosition_Local | 0.004 | 0.004 | 0.004 | 281425363 |
+| BM_SetPosition_World_DeepNode | 0.009 | 0.009 | 0.009 | 109529265 |
+| BM_GetPosition_World_DeepNode | 0.002 | 0.002 | 0.002 | 500200080 |
+| BM_DirtyPropagation_Flat_100 | 0.476 | 0.462 | 0.487 | 2102648 |
+| BM_DirtyPropagation_Flat_1000 | 6.653 | 6.460 | 6.715 | 150302 |
+| BM_DirtyPropagation_Flat_10000 | 68.670 | 65.499 | 71.103 | 14562 |
+| BM_DirtyPropagation_Deep_100 | 1.001 | 0.984 | 1.020 | 998543 |
+| BM_DirtyPropagation_BinaryTree_10 | 0.158 | 0.141 | 0.166 | 6346151 |
+| BM_DirtyPropagation_BinaryTree_15 | 0.300 | 0.293 | 0.310 | 3330160 |
+| BM_GetRotation_World_DeepNode | 0.224 | 0.218 | 0.231 | 4460834 |
+| BM_SetRotation_World_DeepNode | 0.222 | 0.219 | 0.226 | 4506196 |
+| BM_SetRotation_Local | 0.004 | 0.004 | 0.004 | 275799681 |
+| BM_GetForward_World_DeepNode | 0.002 | 0.002 | 0.002 | 490383578 |
+| BM_GetForward_Local | 0.002 | 0.002 | 0.002 | 440847132 |
+| BM_GetAllDirections_World | 0.004 | 0.004 | 0.004 | 283353546 |
+| BM_GetThreeDirections_Separate | 0.005 | 0.005 | 0.005 | 200636419 |
+| BM_GetWorldRotation_Cached | 0.222 | 0.220 | 0.225 | 4509532 |
+| BM_AddChild | 0.022 | 0.019 | 0.032 | 46042296 |
+| BM_RemoveChild | 0.148 | 0.113 | 0.157 | 6773691 |
 
 ## Results by Category
 
@@ -43,56 +48,57 @@
 
 | Benchmark | Avg (us) | Ops/sec |
 |-----------|----------|----------|
-| BM_GetMatrix_Clean | 0.003 | 374181478 |
-| BM_GetMatrix_Dirty | 0.029 | 34235836 |
+| BM_GetMatrix_Clean | 0.002 | 429800658 |
+| BM_GetMatrix_Dirty | 0.017 | 58527929 |
 
 ### Global Matrix Operations
 
 | Benchmark | Avg (us) | Ops/sec |
 |-----------|----------|----------|
-| BM_GetGlobalMatrix_RootNode | 0.002 | 481932356 |
-| BM_GetGlobalMatrix_DeepChain_10 | 0.144 | 6940268 |
-| BM_GetGlobalMatrix_DeepChain_50 | 0.644 | 1551968 |
-| BM_GetGlobalMatrix_DeepChain_100 | 1.144 | 873804 |
-| BM_GetGlobalMatrix_Cached | 0.001 | 750931155 |
+| BM_GetGlobalMatrix_RootNode | 0.002 | 603318250 |
+| BM_GetGlobalMatrix_DeepChain_10 | 0.115 | 8726763 |
+| BM_GetGlobalMatrix_DeepChain_50 | 0.586 | 1707835 |
+| BM_GetGlobalMatrix_DeepChain_100 | 1.058 | 945358 |
+| BM_GetGlobalMatrix_Cached | 0.001 | 714275510 |
 
 ### World Coordinate Operations
 
 | Benchmark | Avg (us) | Ops/sec |
 |-----------|----------|----------|
-| BM_SetPosition_Local | 0.011 | 91150889 |
-| BM_SetPosition_World_DeepNode | 0.016 | 62522899 |
-| BM_GetPosition_World_DeepNode | 0.002 | 491593747 |
-| BM_GetRotation_World_DeepNode | 0.219 | 4567027 |
-| BM_SetRotation_World_DeepNode | 0.181 | 5509743 |
-| BM_SetRotation_Local | 0.010 | 97521396 |
+| BM_SetPosition_Local | 0.004 | 281425363 |
+| BM_SetPosition_World_DeepNode | 0.009 | 109529265 |
+| BM_GetPosition_World_DeepNode | 0.002 | 500200080 |
+| BM_GetRotation_World_DeepNode | 0.224 | 4460834 |
+| BM_SetRotation_World_DeepNode | 0.222 | 4506196 |
+| BM_SetRotation_Local | 0.004 | 275799681 |
+| BM_GetWorldRotation_Cached | 0.222 | 4509532 |
 
 ### Dirty Flag Propagation
 
 | Benchmark | Avg (us) | Ops/sec |
 |-----------|----------|----------|
-| BM_DirtyPropagation_Flat_100 | 0.637 | 1570358 |
-| BM_DirtyPropagation_Flat_1000 | 7.507 | 133205 |
-| BM_DirtyPropagation_Flat_10000 | 76.116 | 13138 |
-| BM_DirtyPropagation_Deep_100 | 1.071 | 933937 |
-| BM_DirtyPropagation_BinaryTree_10 | 1.707 | 585687 |
-| BM_DirtyPropagation_BinaryTree_15 | 52.414 | 19079 |
+| BM_DirtyPropagation_Flat_100 | 0.476 | 2102648 |
+| BM_DirtyPropagation_Flat_1000 | 6.653 | 150302 |
+| BM_DirtyPropagation_Flat_10000 | 68.670 | 14562 |
+| BM_DirtyPropagation_Deep_100 | 1.001 | 998543 |
+| BM_DirtyPropagation_BinaryTree_10 | 0.158 | 6346151 |
+| BM_DirtyPropagation_BinaryTree_15 | 0.300 | 3330160 |
 
 ### Hierarchy Modifications
 
 | Benchmark | Avg (us) | Ops/sec |
 |-----------|----------|----------|
-| BM_AddChild | 0.027 | 36661380 |
-| BM_RemoveChild | 1.434 | 697431 |
+| BM_AddChild | 0.022 | 46042296 |
+| BM_RemoveChild | 0.148 | 6773691 |
 
 ## Analysis
 
 ### Key Findings
 
-- **Matrix Caching:** Clean matrix access is 10.9x faster than dirty recomputation
-- **Rotation Overhead:** World rotation is 17.7x slower than local rotation
-- **Position Overhead:** World position setting is 1.5x slower than local
-- **Hierarchy Depth Impact:** 100-level deep traversal is 859x slower than cached access
+- **Matrix Caching:** Clean matrix access is 7.3x faster than dirty recomputation
+- **Rotation Overhead:** World rotation is 61.2x slower than local rotation
+- **Position Overhead:** World position setting is 2.6x slower than local
+- **Hierarchy Depth Impact:** 100-level deep traversal is 756x slower than cached access
 
 ### Recommendations
 
