@@ -44,6 +44,8 @@ endif()
 option(BUILD_TESTS "Build tests" ON)
 if(BUILD_TESTS)
     enable_testing()
+    # Force Google Test to use shared runtime on Windows
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     add_subdirectory(external/googletest)
     add_subdirectory(tests)
 endif()
