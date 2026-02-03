@@ -492,7 +492,7 @@ TEST_F(NodeTests, checkConnections)
     EXPECT_FALSE(grandChild->hasChild(child));
     EXPECT_FALSE(grandChild->hasChild(grandChild));
     
-    (void)root->removeAllChildren();
+    auto removedChildren = root->removeAllChildren();
     
     EXPECT_FALSE(root->hasParent());
     EXPECT_FALSE(root->isChildOf(root.get()));
